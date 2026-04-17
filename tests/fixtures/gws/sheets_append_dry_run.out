@@ -1,0 +1,21 @@
+Using keyring backend: keyring
+{
+  "body": {
+    "values": [
+      [
+        "a",
+        "b"
+      ]
+    ]
+  },
+  "dry_run": true,
+  "is_multipart_upload": false,
+  "method": "POST",
+  "query_params": [
+    [
+      "valueInputOption",
+      "USER_ENTERED"
+    ]
+  ],
+  "url": "https://sheets.googleapis.com/v4/spreadsheets/sheet%2Did/values/A1:append"
+}

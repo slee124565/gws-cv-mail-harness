@@ -1,0 +1,21 @@
+{
+  "thread_id": "thread-example-message-id",
+  "message_id": "example-message-id@example.com",
+  "references": [],
+  "from": {
+    "name": null,
+    "email": "sender@example.com"
+  },
+  "reply_to": null,
+  "to": [
+    {
+      "name": null,
+      "email": "you@example.com"
+    }
+  ],
+  "cc": null,
+  "subject": "Original subject",
+  "date": "Thu, 1 Jan 2026 00:00:00 +0000",
+  "body_text": "Original message body",
+  "body_html": "<p>Original message body</p>"
+}

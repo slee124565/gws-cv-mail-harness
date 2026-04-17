@@ -1,0 +1,18 @@
+Using keyring backend: keyring
+{
+  "body": null,
+  "dry_run": true,
+  "is_multipart_upload": false,
+  "method": "GET",
+  "query_params": [
+    [
+      "maxResults",
+      "1"
+    ],
+    [
+      "q",
+      "label:inbox"
+    ]
+  ],
+  "url": "https://gmail.googleapis.com/gmail/v1/users/me/messages"
+}

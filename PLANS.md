@@ -13,16 +13,24 @@ This repository is intentionally CLI-first. The first successful version does no
 - [x] (2026-04-17 11:20+08:00) Bootstrapped the root repository scaffold and pushed the initial commit.
 - [x] (2026-04-17 11:35+08:00) Added ExecPlan rules to `AGENTS.md` so future agents are required to treat this file as the primary execution contract.
 - [x] (2026-04-17 11:35+08:00) Added first-pass contract docs and helper scripts so the next agent has stable starting points.
-- [ ] Milestone 1: implement repository-safe `gws` preflight and shell wrapper helpers in `packages/google_workspace/`.
-- [ ] Milestone 2: implement local SQLite state and idempotency tracking in `packages/state_store/`.
-- [ ] Milestone 3: implement the end-to-end runner and real CLI commands in `apps/cli/`.
-- [ ] Milestone 4: add unit and integration tests for wrappers, state, and runner behavior.
-- [ ] Milestone 5: run a human-approved live smoke validation against a test Gmail query and test Google Sheet.
+- [x] (2026-04-17 14:57+08:00) Milestone 1: implemented repository-safe `gws` preflight and typed Gmail / Sheets wrapper helpers in `packages/google_workspace/`, including deterministic JSON parsing for noisy CLI output and request previews for dry-run write/send operations.
+- [x] (2026-04-17 14:57+08:00) Milestone 2: implemented local SQLite state and idempotency tracking in `packages/state_store/` for runs, processed messages, and digest events.
+- [x] (2026-04-17 14:57+08:00) Milestone 3: replaced CLI placeholders with working `preflight`, `run-once`, and `show-state` commands backed by YAML config, runner logic, digest building, and SQLite state.
+- [x] (2026-04-17 14:57+08:00) Milestone 4: added unit and integration tests for wrappers, config, state, and runner behavior; verified the CLI preflight and `run-once --dry-run` path against the local environment.
+- [x] (2026-04-17 16:00+08:00) Milestone 5: completed live smoke validation against the configured test Gmail query and test Google Sheet, including first real Sheet append, digest send, state recording, rerun verification, and a follow-up idempotency fix when the first rerun check exposed duplicate-prevention drift.
 
 ## Surprises & Discoveries
 
 - Observation: The initial scaffold alone is not enough to make a future agent autonomous.
   Evidence: Before this revision, the repository had structure but lacked explicit next-step rules, human gates, and stable contract files.
+- Observation: `gws gmail +read --format json` can return address-shaped fields as either objects or lists, even in otherwise similar message payloads.
+  Evidence: The first real `uv run python -m apps.cli run-once --config runtime/config.local.yaml --dry-run` at 2026-04-17 14:56+08:00 partially failed with `"'list' object has no attribute 'get'"` for Gmail thread `19d96ca9ab88ac82`; normalizing list-shaped address payloads fixed the rerun and the second dry-run completed with `matched_count=3`, `processed_count=3`, `failed_count=0`.
+- Observation: The dry-run path is still useful with live Gmail reads because the write/send layers expose request previews while the state store avoids marking messages as processed.
+  Evidence: The validated dry-run recorded run metadata and digest preview state, showed the exact Sheets append payload, and left `processed_messages` empty in `show-state`.
+- Observation: Live reruns could duplicate prior work because Gmail search returns Gmail API message ids while `gws gmail +read` exposes the RFC `Message-ID` header under `message_id`.
+  Evidence: `show-state` on 2026-04-17 16:xx+08:00 showed successful live runs with `processed_count=3`, but `processed_messages` contained RFC-style ids such as `...@mail.gmail.com` while future search results were matched against Gmail API ids. The runner now records the search result id as the durable processed key and includes a compatibility check against legacy header-based state rows.
+- Observation: The live smoke checklist was executed through the `Failure Handling` section and confirmed the happy path before the rerun bug was corrected.
+  Evidence: `docs/workflows/live-smoke-validation.md` is now checked through preflight, dry-run review, live run, rerun check, and failure handling preparation based on the operator’s completed validation steps.
 
 ## Decision Log
 
@@ -38,11 +46,23 @@ This repository is intentionally CLI-first. The first successful version does no
   Rationale: This keeps early development safe while still allowing agents to make progress through local code, tests, and dry runs.
   Date/Author: 2026-04-17 / Codex
 
+- Decision: `run-once --dry-run` should perform live Gmail search/read operations but keep Sheets append and Gmail send in request-preview mode.
+  Rationale: This gives a human a realistic preview of rows and digest content without crossing the first live-write gate.
+  Date/Author: 2026-04-17 / Codex
+
+- Decision: Treat `runtime/config.local.yaml` as the operator-local config path and commit `runtime/config.local.example.yaml` as the shareable template.
+  Rationale: The repo needs a concrete convention for repeatable dry-run and smoke commands without committing local secrets or operator-specific values.
+  Date/Author: 2026-04-17 / Codex
+
+- Decision: Idempotency in `processed_messages` is keyed by the Gmail API message id from search results, not the RFC `Message-ID` header.
+  Rationale: Gmail API search and rerun eligibility operate on Gmail message ids; storing a different identifier breaks duplicate prevention across runs.
+  Date/Author: 2026-04-17 / Codex
+
 ## Outcomes & Retrospective
 
-- Current outcome: The repository now has a usable control plane for autonomous milestone work.
-- Current gap: The actual implementation modules are still placeholders; the next agent must turn the contracts into working wrappers and runner code.
-- Lesson so far: Agent autonomy depends more on explicit contracts and stop conditions than on long prompts.
+- Current outcome: The repository now has a working local-first implementation path through wrapper parsing, SQLite state, digest construction, CLI commands, dry-run validation, and an exercised live smoke path.
+- Current gap: Existing duplicate rows already written during the pre-fix live rerun remain in the test Sheet; cleanup or reconciliation is still operator-directed work rather than a built-in command.
+- Lesson so far: Both the dry-run path and the first live rerun surfaced real data-shape and identity issues that fixtures alone would not have revealed, so the repo benefits from preserving both validation layers.
 
 ## Context and Orientation
 

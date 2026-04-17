@@ -23,3 +23,4 @@ The digest gives a human quick proof of what the job did without opening logs or
 - The digest must be buildable from recorded run summary data.
 - The digest format should be stable enough for tests to validate key phrases.
 - A rerun digest must make skipped or already-processed behavior visible.
+- The body must explicitly label whether the run was a dry run or a live run.

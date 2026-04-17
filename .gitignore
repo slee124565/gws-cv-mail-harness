@@ -5,6 +5,7 @@ __pycache__/
 runtime/logs/*
 runtime/state/*
 runtime/cache/*
+runtime/config.local.yaml
 !runtime/logs/.gitkeep
 !runtime/state/.gitkeep
 !runtime/cache/.gitkeep

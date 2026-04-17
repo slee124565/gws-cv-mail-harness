@@ -16,12 +16,12 @@ Use this checklist only after:
 
 Before running the live smoke:
 
-- [ ] You are in the repository root: `~/ws/gws-cv-mail-harness`
-- [ ] `PLANS.md` still indicates that live smoke is the current next step
-- [ ] `runtime/config.local.yaml` exists
-- [ ] the Gmail query in `runtime/config.local.yaml` is intentionally narrow
-- [ ] the target Google Sheet is a test sheet or a dedicated test tab
-- [ ] the digest recipient is confirmed and safe for test mail
+- [x] You are in the repository root: `~/ws/gws-cv-mail-harness`
+- [x] `PLANS.md` still indicates that live smoke is the current next step
+- [x] `runtime/config.local.yaml` exists
+- [x] the Gmail query in `runtime/config.local.yaml` is intentionally narrow
+- [x] the target Google Sheet is a test sheet or a dedicated test tab
+- [x] the digest recipient is confirmed and safe for test mail
 
 ## Preflight
 
@@ -31,9 +31,9 @@ Run:
 
 Confirm:
 
-- [ ] `gws auth status` reports the expected account
-- [ ] Python environment sync completes
-- [ ] unit tests pass
+- [x] `gws auth status` reports the expected account
+- [x] Python environment sync completes
+- [x] unit tests pass
 
 If any of the above fail, stop. Do not continue to live smoke.
 
@@ -45,12 +45,12 @@ Run:
 
 Review:
 
-- [ ] the command completes successfully
-- [ ] the reported Gmail query matches the intended test query
-- [ ] matched message count looks reasonable
-- [ ] the preview rows look like expected sheet data
-- [ ] the digest preview looks correct
-- [ ] the dry run does not claim to have written to Sheets or sent a digest
+- [x] the command completes successfully
+- [x] the reported Gmail query matches the intended test query
+- [x] matched message count looks reasonable
+- [x] the preview rows look like expected sheet data
+- [x] the digest preview looks correct
+- [x] the dry run does not claim to have written to Sheets or sent a digest
 
 If the dry run output is surprising, stop and correct the config or code first.
 
@@ -58,9 +58,9 @@ If the dry run output is surprising, stop and correct the config or code first.
 
 Proceed only if all statements are true:
 
-- [ ] I approve the first real Google Sheet write for this test target
-- [ ] I approve the first real digest email send for this test target
-- [ ] I understand that this step will produce real side effects
+- [x] I approve the first real Google Sheet write for this test target
+- [x] I approve the first real digest email send for this test target
+- [x] I understand that this step will produce real side effects
 
 ## Live Run
 
@@ -70,10 +70,10 @@ Run:
 
 Confirm:
 
-- [ ] the command exits successfully
-- [ ] the target Google Sheet shows at least one new row or expected write result
-- [ ] the digest email is received by the confirmed test recipient
-- [ ] the CLI or logs indicate that run state was recorded
+- [x] the command exits successfully
+- [x] the target Google Sheet shows at least one new row or expected write result
+- [x] the digest email is received by the confirmed test recipient
+- [x] the CLI or logs indicate that run state was recorded
 
 ## Rerun Check
 
@@ -83,9 +83,9 @@ Run the exact same live command again:
 
 Confirm:
 
-- [ ] the rerun does not blindly duplicate the previous work
-- [ ] already-processed or skipped behavior is visible in output or digest
-- [ ] state remains internally consistent
+- [x] the rerun does not blindly duplicate the previous work
+- [x] already-processed or skipped behavior is visible in output or digest
+- [x] state remains internally consistent
 
 ## Failure Handling
 

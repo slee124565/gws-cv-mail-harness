@@ -1,0 +1,37 @@
+Using keyring backend: keyring
+{
+  "auth_method": "oauth2",
+  "client_config": "/Users/lee/.config/gws/client_secret.json",
+  "client_config_exists": true,
+  "client_id": "85178405....com",
+  "config_client_id": "85178405....com",
+  "credential_source": "environment_variables",
+  "encrypted_credentials": "/Users/lee/.config/gws/credentials.enc",
+  "encrypted_credentials_exists": true,
+  "encryption_valid": true,
+  "has_refresh_token": true,
+  "keyring_backend": "keyring",
+  "plain_credentials": "/Users/lee/.config/gws/credentials.json",
+  "plain_credentials_exists": false,
+  "project_id": "gen-lang-client-0301108841",
+  "scope_count": 13,
+  "scopes": [
+    "email",
+    "profile",
+    "https://www.googleapis.com/auth/calendar",
+    "https://www.googleapis.com/auth/cloud-platform",
+    "https://www.googleapis.com/auth/documents",
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/gmail.modify",
+    "https://www.googleapis.com/auth/presentations",
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/tasks",
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/userinfo.profile",
+    "openid"
+  ],
+  "storage": "encrypted",
+  "token_cache_exists": true,
+  "token_valid": true,
+  "user": "lee.shiueh@flh.com.tw"
+}

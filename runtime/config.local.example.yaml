@@ -1,0 +1,8 @@
+gmail_query: "label:inbox newer_than:30d"
+sheet_id: "replace-with-test-sheet-id"
+sheet_range: "Test!A1"
+digest_recipient: "replace-with-test-recipient@example.com"
+max_results: 3
+dry_run_default: true
+state_db_path: "runtime/state/gws_cv_mail_harness.sqlite3"
+digest_subject: "gws-cv-mail-harness digest"
