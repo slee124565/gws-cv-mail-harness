@@ -38,3 +38,40 @@ This repository contains a local-first Gmail + Google Sheets + LLM workflow syst
 - Do not bypass the `packages/google_workspace/` boundary to call `gws` from arbitrary modules.
 - Run the documented preflight before any live Gmail or Sheets operation.
 - Do not treat live smoke validation as a substitute for unit or integration tests.
+
+## ExecPlan Rule
+
+When implementing a feature or significant refactor, follow `PLANS.md` as the primary execution contract.
+
+Rules:
+
+- Do not ask the user for next steps if the next milestone is already defined in `PLANS.md`.
+- At every stopping point, update:
+  - `PLANS.md`
+  - affected contract docs in `docs/contracts/`
+  - any new implementation notes needed to resume the task
+- Always prefer this loop:
+  1. inspect current code and contracts
+  2. implement one bounded milestone
+  3. run the most relevant tests
+  4. update `PLANS.md` with progress, decisions, and discoveries
+  5. continue unless a human validation gate is reached
+- Stop only when:
+  - a human approval gate in `PLANS.md` is reached
+  - authentication or environment preflight fails
+  - the current milestone is blocked by missing external information
+
+## Human Gates
+
+The agent may continue autonomously until one of these gates is reached:
+
+- a live Gmail or Google Sheets write is about to happen for the first time
+- a destructive or irreversible operation is required
+- the repository contracts are no longer sufficient to choose between multiple valid product directions
+
+If blocked, the agent must record:
+
+- what it tried
+- what failed
+- the exact missing input or decision
+- the safest next resumption point
