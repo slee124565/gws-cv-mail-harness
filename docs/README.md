@@ -7,7 +7,7 @@ Recommended subdirectories:
 - `contracts/`
   Gmail, Sheets, digest, config, and state definitions
 - `workflows/`
-  development loop, live validation, and recovery rules
+  development loop, live validation, recovery rules, and operator checklists
 - `decisions/`
   longer-lived design decisions that should survive beyond a single task
 
