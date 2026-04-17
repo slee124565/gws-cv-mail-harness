@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+runtime/logs/*
+runtime/state/*
+runtime/cache/*
+!runtime/logs/.gitkeep
+!runtime/state/.gitkeep
+!runtime/cache/.gitkeep
+.env
