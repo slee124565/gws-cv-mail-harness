@@ -4,6 +4,8 @@
 
 This repository contains a local-first Gmail + Google Sheets + LLM workflow system that replaces a Google Apps Script implementation with an agent-developable, testable, and resumable software codebase.
 
+The repository is also an agent harness. Its root files are expected to act as an external memory and control system for long-running implementation work. A future coding agent should be able to resume from repository files rather than from hidden chat history.
+
 ## Start Here
 
 1. Read `AGENTS.md` for repository-wide navigation rules.
@@ -31,6 +33,7 @@ This repository contains a local-first Gmail + Google Sheets + LLM workflow syst
 - `tasks/active/` is active context by default; `archive/` is historical context by default.
 - `runtime/` is execution artifact space, not the primary source of truth.
 - `PLANS.md` is the living implementation plan for long-running work and must stay synchronized with actual progress.
+- If `PLANS.md` and the repository drift apart, fix `PLANS.md` or the drift itself before continuing with large implementation work.
 
 ## Working Rules
 
@@ -41,25 +44,67 @@ This repository contains a local-first Gmail + Google Sheets + LLM workflow syst
 
 ## ExecPlan Rule
 
-When implementing a feature or significant refactor, follow `PLANS.md` as the primary execution contract.
+When writing a complex feature or significant refactor, use `PLANS.md` as the primary execution contract. Treat it as both:
 
-Rules:
+- external memory: the durable context a future agent needs in order to resume
+- control plane: the ordered action system that tells the next agent what to do next
 
-- Do not ask the user for next steps if the next milestone is already defined in `PLANS.md`.
+### When To Create Or Rewrite The ExecPlan
+
+Create or rewrite `PLANS.md` when:
+
+- the work will span multiple sessions or handoffs
+- the work has significant unknowns or research requirements
+- the work crosses multiple modules, contracts, or human gates
+- a future agent would likely make the wrong tradeoff without explicit design guidance
+
+If the current `PLANS.md` is no longer self-contained enough for a novice agent to resume safely, update the plan first.
+
+### ExecPlan Authoring Rules
+
+When authoring or restructuring `PLANS.md`:
+
+- Make it self-contained enough that a novice agent can resume from the working tree plus `PLANS.md` alone.
+- Define non-obvious terms in plain language near where they appear.
+- Name repository-relative files and modules explicitly.
+- Record the current active action, the next queued actions, and any blocked or deferred actions.
+- For each action, include enough detail for the next agent to know what to inspect, what to edit, what to run, and what evidence proves completion.
+- Summarize any external-system facts that are required for implementation inside `PLANS.md` itself. External fetch steps may exist as refresh paths, but they should not be the only place the facts live.
+
+### ExecPlan Implementation Rules
+
+When implementing from `PLANS.md`:
+
+- Do not ask the user for next steps if the next action is already defined in `PLANS.md`.
+- Follow the current active action or the first eligible queued action according to the selection rules in `PLANS.md`.
+- Prefer this loop:
+  1. inspect current code and contracts
+  2. implement one bounded action
+  3. run the most relevant validation
+  4. update `PLANS.md` with progress, decisions, discoveries, and next action state
+  5. continue unless a human validation gate is reached
 - At every stopping point, update:
   - `PLANS.md`
   - affected contract docs in `docs/contracts/`
   - any new implementation notes needed to resume the task
-- Always prefer this loop:
-  1. inspect current code and contracts
-  2. implement one bounded milestone
-  3. run the most relevant tests
-  4. update `PLANS.md` with progress, decisions, and discoveries
-  5. continue unless a human validation gate is reached
-- Stop only when:
-  - a human approval gate in `PLANS.md` is reached
-  - authentication or environment preflight fails
-  - the current milestone is blocked by missing external information
+
+### ExecPlan Revision Rules
+
+When discussing, revising, or changing course:
+
+- Record design changes in `Decision Log`.
+- Record unexpected behavior, failed assumptions, or useful evidence in `Surprises & Discoveries`.
+- Split partially completed work into explicit done and remaining action states.
+- Add a change note at the bottom of `PLANS.md` when the plan structure or implementation strategy materially changes.
+
+### Stop Conditions
+
+Stop only when:
+
+- a human approval gate in `PLANS.md` is reached
+- authentication or environment preflight fails
+- the current action is blocked by missing external information
+- `PLANS.md` is too stale or ambiguous to safely continue and must be repaired first
 
 ## Human Gates
 

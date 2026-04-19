@@ -1,12 +1,225 @@
 # This ExecPlan is a living document. The sections `Progress`, `Surprises & Discoveries`, `Decision Log`, and `Outcomes & Retrospective` must be kept up to date as work proceeds.
 
-This repository uses `PLANS.md` as the primary execution contract for major work. Any agent implementing this plan must keep this file synchronized with actual code, tests, validation evidence, and design decisions so the work can resume from this file alone.
+This repository uses `PLANS.md` as the primary execution contract for major work. Any agent implementing this plan must keep this file synchronized with actual code, tests, validation evidence, and design decisions so the work can resume from this file alone. This file is intended to act as both external memory and a control plane for long-running work.
 
 ## Purpose / Big Picture
 
 After this change, `gws-cv-mail-harness` will no longer be a generic local Gmail-to-Sheet demo. It will become a local-first replacement for the existing HR Google Apps Script system that processes 104 resume emails for a single job opening, writes business-facing results into Google Sheets, creates interview invitation drafts, and sends both an HR business digest and an agent execution digest. A human should be able to run the local workflow from the repository, inspect the resulting Sheet, review created Gmail drafts, read the daily summary mail, and safely rerun the same workflow without duplicate processing or silent partial state.
 
-The coding-agent goal is equally important: Codex must be able to read this file, inspect the repository, choose the next bounded milestone, implement it, test it, record what changed, and continue without asking for next steps unless a human gate is reached. This plan therefore defines both the product behavior and the autonomous implementation loop.
+The coding-agent goal is equally important: Codex must be able to read this file, inspect the repository, choose the next bounded action, implement it, test it, record what changed, and continue without asking for next steps unless a human gate is reached. This plan therefore defines both the product behavior and the autonomous implementation loop.
+
+## Current Active Action
+
+Action ID: `A1`
+
+Goal:
+
+Replace the generic contract layer with an HR-specific contract set, and update the root orientation docs so a novice agent can understand the real product without reading the old Apps Script source first.
+
+Why this action is active:
+
+- The repository has already proved the generic local loop.
+- The next major risk is not implementation mechanics; it is control-plane drift between the real HR workflow and the repo contracts.
+- Until the contract layer is rewritten, future agents will keep planning against the wrong abstraction boundary.
+
+Files to inspect before editing:
+
+- `README.md`
+- `ARCHITECTURE.md`
+- `PLANS.md`
+- `docs/contracts/config-model.md`
+- `docs/contracts/digest-format.md`
+- `docs/contracts/gmail-search.md`
+- `docs/contracts/sheet-schema.md`
+- `docs/contracts/state-store.md`
+
+Files expected to change in this action:
+
+- `README.md`
+- `ARCHITECTURE.md`
+- `docs/contracts/config-model.md`
+- `docs/contracts/digest-format.md`
+- `docs/contracts/sheet-schema.md`
+- `docs/contracts/state-store.md`
+- new HR-specific contract files under `docs/contracts/`
+
+Commands to run:
+
+    cd /Users/lee/ws/gws-cv-mail-harness
+    find docs/contracts -maxdepth 1 -type f | sort
+    sed -n '1,220p' README.md
+    sed -n '1,220p' ARCHITECTURE.md
+    sed -n '1,220p' docs/contracts/config-model.md
+    sed -n '1,220p' docs/contracts/digest-format.md
+    sed -n '1,220p' docs/contracts/sheet-schema.md
+    sed -n '1,220p' docs/contracts/state-store.md
+
+Expected evidence:
+
+- A novice can identify the repository-native profile model, prompt asset model, anomaly policy, business-facing Sheet projection rules, dual digest rules, and checkpoint semantics by reading `docs/contracts/` plus the root docs.
+- `README.md` and `ARCHITECTURE.md` no longer describe the repository as if the generic harness were still the main product.
+- `PLANS.md` can point to the new contract files without requiring the next agent to reconstruct product meaning from live Apps Script.
+
+Exit condition:
+
+- The generic contract set is either replaced or explicitly subordinated to a new HR contract set.
+- The root docs and `PLANS.md` all describe the same product boundary.
+- The next action can proceed without first clarifying what the HR workflow is supposed to do.
+
+Safe-stop note:
+
+- This action is document-only. Stopping midway is safe as long as `PLANS.md` is updated to describe which contract files were changed and which remain generic.
+
+## Action Queue
+
+### Ready Actions
+
+#### `A2` Repo-native profile and prompt assets
+
+Goal:
+
+Introduce a repository-native active profile and prompt asset layout so Google Sheet is no longer the settings source of truth.
+
+Depends on:
+
+- `A1`
+
+Inspect:
+
+- `docs/contracts/config-model.md`
+- new HR contract files from `A1`
+- `apps/cli/__main__.py`
+- `runtime/config.local.example.yaml`
+- `runtime/config.local.yaml`
+
+Edit:
+
+- `apps/cli/__main__.py`
+- `runtime/config.local.example.yaml`
+- new profile / prompt asset paths in the repository
+- contracts that define profile loading
+
+Evidence:
+
+- A sample active profile exists in repo-native form.
+- The CLI can validate the active profile before live processing.
+- A future agent can identify which values are committed defaults versus local secrets.
+
+Exit condition:
+
+- The repository contains one active job profile shape and one prompt asset structure that map to the HR workflow.
+
+#### `A3` Intake, classification, anomaly handling, and raw artifacts
+
+Goal:
+
+Replace the generic message-to-row assumption with HR-specific intake rules and durable anomaly handling.
+
+Depends on:
+
+- `A2`
+
+Inspect:
+
+- `packages/google_workspace/`
+- `packages/runner/`
+- `packages/state_store/`
+- contracts produced by `A1` and `A2`
+
+Edit:
+
+- `packages/runner/`
+- `packages/state_store/`
+- any helper modules needed for classification and raw artifact capture
+- tests for classification and anomaly handling
+
+Evidence:
+
+- A dry run can show accepted messages, anomaly messages, and raw artifact capture intentions.
+- The one-candidate-per-message rule is explicit in both code and tests.
+
+Exit condition:
+
+- The runner no longer assumes every matched message should become a normal downstream candidate record.
+
+#### `A4` HTML-to-Markdown, extraction, and candidate review
+
+Goal:
+
+Implement the content-processing chain that produces durable intermediate artifacts and review outputs for one candidate.
+
+Depends on:
+
+- `A3`
+
+Evidence:
+
+- Fixtures or tests show HTML input, Markdown output, extracted contact fields, and candidate review output.
+
+#### `A5` Business projection, invitation drafts, and dual digests
+
+Goal:
+
+Project HR-facing outputs into Sheet, Gmail drafts, and two digest views.
+
+Depends on:
+
+- `A4`
+
+Evidence:
+
+- The repository can preview business projection, draft creation, and both digest types without irreversible actions.
+
+#### `A6` Checkpoint/resume and interruption handling
+
+Goal:
+
+Extend durable state so partial progress and retry state are first-class.
+
+Depends on:
+
+- `A3`
+- `A4`
+- `A5`
+
+Evidence:
+
+- State can distinguish completed, partial, anomaly, and retry-ready candidate states.
+
+#### `A7` End-to-end validation
+
+Goal:
+
+Validate the full HR workflow for one constrained live profile.
+
+Depends on:
+
+- `A1`
+- `A2`
+- `A3`
+- `A4`
+- `A5`
+- `A6`
+
+Evidence:
+
+- Unit, integration, and guided live validation all exist and are recorded in `PLANS.md`.
+
+### Blocked Or Deferred Actions
+
+- Multi-profile support is deferred until the single-profile HR replacement path is stable.
+- Multi-provider abstraction is deferred until one provider path proves the end-to-end HR workflow.
+- Any local web UI beyond CLI and business-facing Sheet is deferred unless the contracts or validation show it is necessary.
+
+## Action Selection Rules
+
+Choose the next action using these rules:
+
+1. If `Current Active Action` is incomplete and unblocked, continue it.
+2. If the active action completes, choose the first ready action whose dependencies are all complete.
+3. If a blocked action becomes unblocked because a dependency completed, move it into `Ready Actions` and make it active only if it is the earliest eligible action.
+4. If implementation reveals that the current action is too large, split it into smaller action IDs in this file before continuing.
+5. If the repository and this plan drift apart, repair the plan first unless the drift is trivial and can be fixed in the same bounded edit.
 
 ## Progress
 
@@ -16,12 +229,15 @@ The coding-agent goal is equally important: Codex must be able to read this file
 - [x] (2026-04-17 16:00+08:00) Completed first live smoke validation for the generic harness path and fixed the Gmail API idempotency bug.
 - [x] (2026-04-18 10:00+08:00) Reconstructed the legacy HR Apps Script system as the canonical product reference, including `履歷清單` lifecycle, `CONFIG` keys, `PROMPTS` keys, invitation draft behavior, and digest/report flow.
 - [x] (2026-04-18 23:50+08:00) Reframed the repository goal: v1 is now the complete HR workflow replacement for one job profile, not a generic Gmail harness.
-- [ ] Replace the generic harness-oriented contracts with HR workflow contracts that define repo-native configuration, resume message classes, anomaly policy, business-facing Sheet projection, dual digest behavior, and checkpoint/resume semantics.
-- [ ] Implement repo-native operator configuration and prompt assets so Google Sheet is no longer the settings source of truth.
-- [ ] Implement HR resume ingestion rules, including three 104 email classes, one-candidate-per-message validation, anomaly logging, and durable raw artifact capture.
-- [ ] Implement the full processing chain: HTML to Markdown, contact extraction, CV review, invitation draft creation, Sheet projection, and dual digest generation.
-- [ ] Implement checkpoint/resume and partial-failure handling for local runtime limits such as token exhaustion, API errors, and interrupted runs.
-- [ ] Validate the complete HR workflow end to end against a constrained live profile with repeatable tests and live evidence.
+- [x] (2026-04-19 08:00+08:00) Reviewed the repository against the OpenAI ExecPlan article and identified four control-plane gaps: insufficient self-containment, lack of an action queue, insufficient file-level executable specification, and missing plan-authoring rules in `AGENTS.md`.
+- [x] (2026-04-19 08:35+08:00) Rewrote `AGENTS.md` and `PLANS.md` so the root control plane now explicitly covers ExecPlan authoring, implementation, revision, active action selection, action queueing, and safe resumption.
+- [ ] `A1` Replace the generic contract layer with an HR-specific contract set and align root orientation docs with the real product.
+- [ ] `A2` Introduce repo-native profile and prompt asset structure.
+- [ ] `A3` Implement intake, classification, anomaly handling, and raw artifact capture.
+- [ ] `A4` Implement HTML-to-Markdown, extraction, and candidate review.
+- [ ] `A5` Implement business projection, invitation drafts, and dual digests.
+- [ ] `A6` Implement checkpoint/resume and interruption handling.
+- [ ] `A7` Validate the complete HR workflow end to end against a constrained live profile.
 
 ## Surprises & Discoveries
 
@@ -42,6 +258,9 @@ The coding-agent goal is equally important: Codex must be able to read this file
 
 - Observation: The result Sheet serves executives and hiring managers, not just implementers.
   Evidence: The user explicitly clarified that Google Sheet should remain a business-facing review surface for HR, department heads, and the CEO, and should not expose too much internal evaluation-process noise.
+
+- Observation: The repository had already adopted the language of a living plan, but not yet the stronger control-plane structure needed for low-context resumption.
+  Evidence: The 2026-04-19 review found that the old `PLANS.md` still behaved like a roadmap rather than a resumable action system.
 
 ## Decision Log
 
@@ -77,11 +296,16 @@ The coding-agent goal is equally important: Codex must be able to read this file
   Rationale: Local execution should safely stop and resume when tokens, APIs, or the operator interrupt work, rather than simulating Apps Script’s runtime budget directly.
   Date/Author: 2026-04-18 / Codex
 
+- Decision: Before implementing more HR-specific code, the repository should first be upgraded so `AGENTS.md` and `PLANS.md` act as a stronger external memory and control plane.
+  Rationale: The 2026-04-19 review concluded that future implementation work would otherwise continue to rely too heavily on hidden agent reasoning and repo-context reconstruction.
+  Date/Author: 2026-04-19 / Codex
+
 ## Outcomes & Retrospective
 
 - Current outcome: The repository already proves the minimum local loop of Gmail search, Gmail read, Sheet append, digest send, SQLite state, and rerun safety.
-- Current gap: The repository does not yet implement the HR-specific workflow that justified the migration in the first place. It lacks repo-native profile configuration, raw artifact persistence, HTML-to-Markdown conversion, contact extraction, CV review, invitation draft policy, business-facing Sheet projection, dual digests, and checkpoint/resume.
-- Lesson so far: A generic harness was a useful proof of feasibility, but it is now a liability if the plan continues to optimize for genericity instead of the actual recruiting workflow.
+- Current outcome: The root control plane now more explicitly separates authoring rules, implementation rules, revision rules, and queued actions for future agents.
+- Current gap: The repository still does not implement the HR-specific workflow that justified the migration in the first place. It lacks repo-native profile configuration, raw artifact persistence, HTML-to-Markdown conversion, contact extraction, CV review, invitation draft policy, business-facing Sheet projection, dual digests, and checkpoint/resume.
+- Lesson so far: A generic harness was a useful proof of feasibility, but it became a liability once the real product boundary was clearer. The repository now needs contract-layer clarity before more code.
 
 ## Context and Orientation
 
@@ -97,13 +321,26 @@ The phrase “anomaly” means an input or runtime condition that should not be 
 
 The phrase “checkpoint” means durable local state that records enough progress for the next run to continue safely without duplicating completed work or losing the reason for interruption.
 
+The canonical legacy facts required for the next implementation stages are already known and should be treated as part of this plan, not as hidden context:
+
+- legacy Sheet tabs: `履歷清單`, `CONFIG`, `PROMPTS`
+- legacy property family: processed ids, Drive destination id, LLM provider key, digest recipients, storage bucket id
+- supported message classes: 104 matching recommendation, 104 self-recommendation, 104 manual forward
+- anomaly policy: messages that appear to contain more than one candidate are skipped and reported
+- invitation policy: invitation emails remain draft-first
+- digest policy: the local system must support both a business summary and an execution summary
+
+Refreshing the live Apps Script source can still be useful, but it is a refresh path, not the primary way a future agent should learn these facts.
+
 ## Plan of Work
 
 ### Milestone 1: Replace generic contracts with HR workflow contracts
 
-This milestone changes the repository’s definition of “done.” At the end of it, a novice reader should be able to understand the actual product from repo files without reading the old Apps Script code. Add or replace contracts under `docs/contracts/` so they describe the HR product, not the generic harness. Introduce repository-relative files for at least the following concepts:
+This milestone changes the repository’s definition of “done.” At the end of it, a novice reader should be able to understand the actual product from repo files without reading the old Apps Script code. Add or replace contracts under `docs/contracts/` so they describe the HR product, not the generic harness.
 
-- one job profile configuration model
+The minimum contract set at the end of this milestone should make the following concepts explicit:
+
+- repository-native job profile configuration
 - prompt asset structure and loading rules
 - resume email classes and classification rules
 - anomaly policy and reporting rules
@@ -111,7 +348,18 @@ This milestone changes the repository’s definition of “done.” At the end o
 - dual digest format
 - checkpoint/resume semantics
 
-Update `README.md`, `ARCHITECTURE.md`, and this file only if needed to keep the repository orientation coherent. The expected proof for this milestone is document-level: the contracts should make it obvious what the system must do, which data belongs in repo files, which data belongs in runtime state, and what the user-visible outputs are.
+The expected file-level shape is:
+
+- add a contract that defines the job profile model
+- add a contract that defines supported resume message classes and how they are recognized
+- add a contract that defines anomaly recording and reporting semantics
+- replace or rewrite `docs/contracts/config-model.md` so it describes repo-native profile configuration rather than generic YAML alone
+- replace or rewrite `docs/contracts/digest-format.md` so it distinguishes the HR business digest from the execution digest
+- replace or rewrite `docs/contracts/sheet-schema.md` so it describes the business-facing projection instead of a generic append payload
+- replace or rewrite `docs/contracts/state-store.md` so it names candidate state, anomaly state, digest state, and checkpoint state
+- update `README.md` and `ARCHITECTURE.md` only as needed to keep the repository orientation coherent
+
+The expected proof for this milestone is document-level but concrete: a novice should be able to identify which data belongs in repo files, which data belongs in runtime state, what the business-facing outputs are, and what the next implementation step must preserve.
 
 ### Milestone 2: Introduce repo-native profile configuration and prompt assets
 
@@ -121,24 +369,13 @@ This milestone should define and wire one active profile for the target job open
 
 ### Milestone 3: Implement intake, classification, anomaly handling, and raw artifacts
 
-Replace the generic “message in, row out” assumption with recruiting-specific intake logic. The runner must:
-
-- search Gmail using the active profile
-- classify each matching message into one of the supported 104 email classes
-- validate that only one candidate is represented
-- skip and record anomalies instead of guessing
-- persist raw message artifacts and metadata needed for later steps
+Replace the generic “message in, row out” assumption with recruiting-specific intake logic. The runner must search Gmail using the active profile, classify each matching message into one of the supported 104 email classes, validate that only one candidate is represented, skip and record anomalies instead of guessing, and persist raw message artifacts and metadata needed for later steps.
 
 At the end of this milestone, a dry run should already be able to show which messages were accepted, which were skipped as anomalies, and what raw artifacts would be captured for downstream processing.
 
 ### Milestone 4: Implement HTML-to-Markdown, contact extraction, and CV review
 
-Add the content-processing chain that made the old system resilient to layout variation. The plan is not to write brittle string slicing. The plan is to preserve the old design intent while making it testable and resumable locally. The processing chain must:
-
-- convert resume HTML into stable Markdown
-- extract contact details and candidate code from the Markdown
-- evaluate the candidate against the profile’s job description and benchmark material
-- preserve both intermediate artifacts and final review outputs in durable local artifacts
+Add the content-processing chain that made the old system resilient to layout variation. The plan is not to write brittle string slicing. The plan is to preserve the old design intent while making it testable and resumable locally. The processing chain must convert resume HTML into stable Markdown, extract contact details and candidate code from the Markdown, evaluate the candidate against the profile’s job description and benchmark material, and preserve both intermediate artifacts and final review outputs in durable local artifacts.
 
 This milestone must produce observable artifacts and tests. A novice must be able to inspect the generated Markdown, extracted contact fields, and review result for a fixture before any live mail or Sheet projection is trusted.
 
@@ -157,13 +394,7 @@ The business digest may go to HR and related managers. The execution digest may 
 
 ### Milestone 6: Implement checkpoint/resume and local interruption handling
 
-This milestone replaces the old cloud runtime guard with local recovery rules. The system must be able to stop safely and continue later when:
-
-- the LLM provider returns errors
-- local agent/model token budgets are exhausted
-- Google APIs fail temporarily
-- the operator stops the run
-- only part of the candidate batch completed
+This milestone replaces the old cloud runtime guard with local recovery rules. The system must be able to stop safely and continue later when the LLM provider returns errors, local agent or model token budgets are exhausted, Google APIs fail temporarily, the operator stops the run, or only part of the candidate batch completed.
 
 The state model must make the stop reason visible and allow a future run to continue from the next safe boundary. Safe boundary means a point where no already-projected candidate is projected again and no half-written business output is mistaken for success.
 
@@ -189,15 +420,9 @@ Before implementation or live validation, inspect the repository control plane:
     sed -n '1,220p' AGENTS.md
     sed -n '1,260p' README.md
     sed -n '1,260p' ARCHITECTURE.md
-    sed -n '1,260p' PLANS.md
+    sed -n '1,320p' PLANS.md
 
-Confirm the Google Workspace boundary before touching Gmail, Sheets, or drafts:
-
-    ./scripts/preflight.sh
-
-Expect the command to confirm a valid authenticated `gws` environment. If authentication, scopes, or the account identity are wrong, stop and record the blocker in `Progress`, `Surprises & Discoveries`, and `Decision Log`.
-
-Before changing contracts, inspect the existing generic contract set:
+For `A1`, inspect the current generic contract set before editing:
 
     find docs/contracts -maxdepth 1 -type f | sort
     sed -n '1,220p' docs/contracts/config-model.md
@@ -205,13 +430,13 @@ Before changing contracts, inspect the existing generic contract set:
     sed -n '1,220p' docs/contracts/sheet-schema.md
     sed -n '1,220p' docs/contracts/state-store.md
 
-Before implementing profile-aware behavior, refresh the legacy system facts if needed:
+When `A1` is complete, the next agent should be able to identify the HR product contract without cloning the old Apps Script. Refreshing legacy source is optional and only for verification:
 
     clasp show-authorized-user
     clasp clone 1e0cZMYPKz2zwHNzvtQFkwSL97U-IlTXcPoSS0SHuY-5GjGmcouuOsgLN --rootDir /tmp/clasp-gws-cv-map
     sed -n '1,260p' /tmp/clasp-gws-cv-map/code.js
 
-During development, keep the test loop narrow and frequent:
+During development, keep the validation loop narrow and frequent:
 
     uv sync
     uv run pytest tests/unit
@@ -219,6 +444,7 @@ During development, keep the test loop narrow and frequent:
 
 When adding live-profile behavior, keep a safe preview path:
 
+    ./scripts/preflight.sh
     uv run python -m apps.cli preflight --config runtime/config.local.yaml
     uv run python -m apps.cli run-once --config runtime/config.local.yaml --dry-run
 
@@ -272,7 +498,7 @@ At every gate, the agent must record exactly what is ready, what evidence exists
 
 ## Idempotence and Recovery
 
-Every milestone in this plan must be safe to repeat. If a command is run twice, it should not corrupt durable state or create duplicate business projection unless the command is explicitly designed to reproject from scratch.
+Every action and milestone in this plan must be safe to repeat. If a command is run twice, it should not corrupt durable state or create duplicate business projection unless the command is explicitly designed to reproject from scratch.
 
 Processed-candidate state must be durable and consultable before projecting business outputs. Anomalies must also be durable. A future run must be able to distinguish among:
 
@@ -317,6 +543,8 @@ Important legacy reference facts:
     digest rule: both business summary and execution summary are required in the new system
 
 Change note: 2026-04-18 / Rewrote this plan from a generic harness implementation path into an HR workflow replacement ExecPlan. The reason for this revision is that the product goal was clarified: complete local replacement of the recruiting workflow for one job profile, with repo-native configuration and an autonomous agent coding loop.
+
+Change note: 2026-04-19 / Reworked the root control plane after an ExecPlan architecture review. The reason for this revision is that the previous plan behaved more like a roadmap than a resumable external memory plus action system, so this file now explicitly records the active action, queued actions, action-selection rules, and the canonical legacy facts needed for the next implementation stages.
 
 ## Interfaces and Dependencies
 
